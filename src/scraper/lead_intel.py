@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
 from .models import LeadProfile, LeadSignal, OfferScore, PageSnapshot
-
 
 BOOKING_TERMS = (
     "book online",
@@ -88,7 +85,10 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
                 snapshot,
                 kind="no_online_booking",
                 label="No obvious online booking language",
-                rationale="A phone path was observed but common online booking language was not found on the page.",
+                rationale=(
+                    "A phone path was observed but common online booking language "
+                    "was not found on the page."
+                ),
                 delta=16,
                 confidence=0.7,
             )
@@ -99,7 +99,10 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
                 snapshot,
                 kind="no_live_chat",
                 label="No obvious live-chat path",
-                rationale="A phone path was observed but common live-chat language was not found on the page.",
+                rationale=(
+                    "A phone path was observed but common live-chat language "
+                    "was not found on the page."
+                ),
                 delta=8,
                 confidence=0.65,
             )
@@ -110,7 +113,10 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
                 snapshot,
                 kind="high_intent_cta",
                 label="High-intent acquisition language",
-                rationale="The page contains conversion language such as call-now, quote, or same-day service.",
+                rationale=(
+                    "The page contains conversion language such as call-now, quote, "
+                    "or same-day service."
+                ),
                 delta=12,
                 confidence=0.85,
             )
@@ -191,7 +197,10 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
             offer="voice_ai",
             score=voice_score,
             confidence=confidence,
-            explanation="Ranks observable phone dependence, after-hours demand and missing self-service paths.",
+            explanation=(
+                "Ranks observable phone dependence, after-hours demand and "
+                "missing self-service paths."
+            ),
         ),
         OfferScore(
             offer="website",
@@ -203,15 +212,17 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
             offer="automation",
             score=automation_score,
             confidence=confidence,
-            explanation="Ranks visible demand and opportunities to automate lead capture or follow-up.",
+            explanation=(
+                "Ranks visible demand and opportunities to automate lead capture "
+                "or follow-up."
+            ),
         ),
     ]
     best = max(offer_scores, key=lambda item: item.score)
 
-    why_now_parts = [
-        signal.label for signal in sorted(signals, key=lambda item: item.score_delta, reverse=True)[:3]
-    ]
-    hostname = (urlparse(str(snapshot.url)).hostname or "").removeprefix("www.")
+    ranked_signals = sorted(signals, key=lambda item: item.score_delta, reverse=True)
+    why_now_parts = [signal.label for signal in ranked_signals[:3]]
+    hostname = (snapshot.url.host or "").removeprefix("www.")
 
     return LeadProfile(
         domain=hostname,
@@ -222,5 +233,9 @@ def audit_lead(snapshot: PageSnapshot) -> LeadProfile:
         confidence=confidence,
         evidence=snapshot.evidence,
         recommended_offer=best.offer,
-        why_now="; ".join(why_now_parts) if why_now_parts else "No strong public signal detected.",
+        why_now=(
+            "; ".join(why_now_parts)
+            if why_now_parts
+            else "No strong public signal detected."
+        ),
     )

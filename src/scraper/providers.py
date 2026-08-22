@@ -118,7 +118,11 @@ class BrowserExecutor:
                     if step.type.value == "navigate":
                         target = value or f"https://{capability.domain}"
                         self.url_policy.validate(target)
-                        await page.goto(target, wait_until="domcontentloaded", timeout=step.timeout_ms)
+                        await page.goto(
+                            target,
+                            wait_until="domcontentloaded",
+                            timeout=step.timeout_ms,
+                        )
                     elif step.type.value == "click":
                         await page.locator(selector).click(timeout=step.timeout_ms)
                     elif step.type.value == "fill":
@@ -126,14 +130,17 @@ class BrowserExecutor:
                     elif step.type.value == "wait_for":
                         await page.locator(selector).wait_for(timeout=step.timeout_ms)
                     elif step.type.value == "extract_text":
-                        data[step.output_key or f"step_{index}"] = await page.locator(selector).inner_text(
+                        output_key = step.output_key or f"step_{index}"
+                        data[output_key] = await page.locator(selector).inner_text(
                             timeout=step.timeout_ms
                         )
                     elif step.type.value == "extract_attr":
                         if not step.attribute:
                             raise ValueError("extract_attr requires attribute")
-                        data[step.output_key or f"step_{index}"] = await page.locator(selector).get_attribute(
-                            step.attribute, timeout=step.timeout_ms
+                        output_key = step.output_key or f"step_{index}"
+                        data[output_key] = await page.locator(selector).get_attribute(
+                            step.attribute,
+                            timeout=step.timeout_ms,
                         )
                     elif step.type.value == "assert_text":
                         actual = await page.locator(selector).inner_text(timeout=step.timeout_ms)
