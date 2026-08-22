@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 from bs4 import BeautifulSoup, Tag
@@ -67,15 +68,11 @@ def _control_schema(control: Tag) -> dict[str, Any] | None:
         schema["default"] = str(value)
 
     if control.get("min") is not None and schema["type"] == "number":
-        try:
+        with suppress(ValueError):
             schema["minimum"] = float(str(control.get("min")))
-        except ValueError:
-            pass
     if control.get("max") is not None and schema["type"] == "number":
-        try:
+        with suppress(ValueError):
             schema["maximum"] = float(str(control.get("max")))
-        except ValueError:
-            pass
 
     return schema
 
