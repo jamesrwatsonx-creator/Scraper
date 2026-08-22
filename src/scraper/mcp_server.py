@@ -3,7 +3,9 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 from .capabilities import CapabilityRegistry, CapabilityVerifier
+from .health import ScraperDoctor
 from .lead_intel import audit_lead
+from .native_tools import discover_native_tools
 from .providers import BrowserExecutor, HttpExtractor
 from .router import CapabilityRouter
 
@@ -13,6 +15,7 @@ http = HttpExtractor()
 browser = BrowserExecutor()
 router = CapabilityRouter(registry=registry, http=http, browser=browser)
 verifier = CapabilityVerifier(registry, browser)
+doctor_service = ScraperDoctor(registry)
 
 
 @mcp.tool()
@@ -20,6 +23,13 @@ async def web_fetch(url: str) -> dict:
     """Fetch public web content with provenance using the least expensive route."""
     result = await router.fetch(url)
     return result.model_dump(mode="json")
+
+
+@mcp.tool()
+async def webmcp_discover(url: str) -> dict:
+    """Detect imperative and declarative WebMCP affordances exposed by a page."""
+    snapshot = await http.fetch(url)
+    return discover_native_tools(snapshot).model_dump(mode="json")
 
 
 @mcp.tool()
@@ -53,6 +63,13 @@ async def capability_verify(capability_id: str, inputs: dict | None = None) -> d
         return {"ok": False, "error": "capability not found"}
     result = await verifier.verify(capability, inputs or {})
     return result.model_dump(mode="json")
+
+
+@mcp.tool()
+def doctor(domain: str = "") -> dict:
+    """Report capability health, degraded routes, and unproven domains."""
+    report = doctor_service.inspect(domain=domain or None)
+    return report.model_dump(mode="json")
 
 
 def main() -> None:
