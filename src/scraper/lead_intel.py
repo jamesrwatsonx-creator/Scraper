@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .models import LeadProfile, LeadSignal, OfferScore, PageSnapshot
 
-
 BOOKING_TERMS = (
     "book online",
     "schedule online",
