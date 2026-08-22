@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 from typing import Any
@@ -52,7 +51,7 @@ class CapabilityRegistry:
         for path in self.root.glob("*.json"):
             try:
                 item = Capability.model_validate_json(path.read_text(encoding="utf-8"))
-            except (ValueError, json.JSONDecodeError):
+            except ValueError:
                 continue
             if domain and item.domain != domain.lower().removeprefix("www."):
                 continue
